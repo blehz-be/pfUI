@@ -1887,6 +1887,7 @@ function pfUI.uf:RefreshUnit(unit, component)
   local custom = unit.config.defcolor == "0" and unit.config.custom or C.unitframes.custom
 
   local r, g, b, a = .2, .2, .2, 1
+  local force_pastel = 0
   if customfullhp == "1" and UnitHealth(unitstr) == UnitHealthMax(unitstr) then
     r, g, b, a = pfUI.api.strsplit(",", customcolor)
     custom_active = true
@@ -1907,6 +1908,7 @@ function pfUI.uf:RefreshUnit(unit, component)
     else
       local color = UnitReactionColor[UnitReaction(unitstr, "player")]
       if color then r, g, b = color.r, color.g, color.b end
+      force_pastel = 1
     end
   elseif custom == "1"  then
     r, g, b, a = pfUI.api.strsplit(",", customcolor)
@@ -1919,7 +1921,7 @@ function pfUI.uf:RefreshUnit(unit, component)
     end
   end
 
-  if C.unitframes.pastel == "1" and not custom_active then
+  if (C.unitframes.pastel == "1" and not custom_active) or force_pastel == 1 then
     r, g, b = (r + .5) * .5, (g + .5) * .5, (b + .5) * .5
   end
 
@@ -2542,6 +2544,7 @@ function pfUI.uf.GetColor(self, preset)
   local unitstr = self.label .. self.id
   local r, g, b = 1, 1, 1
 
+  local force_pastel = 0
   if preset == "unit" and config["classcolor"] == "1" then
     if UnitIsPlayer(unitstr) then
       local _, class = UnitClass(unitstr)
@@ -2560,6 +2563,7 @@ function pfUI.uf.GetColor(self, preset)
     else
       local color = UnitReactionColor[UnitReaction(unitstr, "player")]
       if color then r, g, b = color.r, color.g, color.b end
+      force_pastel = 1
     end
 
   elseif preset == "class" and config["classcolor"] == "1" then
@@ -2581,9 +2585,26 @@ function pfUI.uf.GetColor(self, preset)
     end
 
   elseif preset == "power" and config["powercolor"] == "1" then
-    r = ManaBarColor[UnitPowerType(unitstr)].r
-    g = ManaBarColor[UnitPowerType(unitstr)].g
-    b = ManaBarColor[UnitPowerType(unitstr)].b
+    --r = ManaBarColor[UnitPowerType(unitstr)].r
+    --g = ManaBarColor[UnitPowerType(unitstr)].g
+    --b = ManaBarColor[UnitPowerType(unitstr)].b
+    local mana = config.defcolor == "0" and config.manacolor or C.unitframes.manacolor
+    local rage = config.defcolor == "0" and config.ragecolor or C.unitframes.ragecolor
+    local energy = config.defcolor == "0" and config.energycolor or C.unitframes.energycolor
+    local focus = config.defcolor == "0" and config.focuscolor or C.unitframes.focuscolor
+  
+    --local r, g, b, a = .5, .5, .5, 1
+    local utype = UnitPowerType(unitstr)
+    local a = 1
+    if utype == 0 then
+      r, g, b, a = pfUI.api.strsplit(",", C.unitframes.manacolor)
+    elseif utype == 1 then
+      r, g, b, a = pfUI.api.strsplit(",", rage)
+    elseif utype == 2 then
+      r, g, b, a = pfUI.api.strsplit(",", focus)
+    elseif utype == 3 then
+      r, g, b, a = pfUI.api.strsplit(",", energy)
+    end
 
   elseif preset == "level" and config["levelcolor"] == "1" then
     r = GetDifficultyColor(UnitLevel(unitstr)).r
@@ -2592,7 +2613,7 @@ function pfUI.uf.GetColor(self, preset)
   end
 
   -- pastel
-  if C.unitframes.pastel == "1" then
+  if C.unitframes.pastel == "1" or force_pastel == 1 then
     r = ( r + .75 ) * .5
     g = ( g + .75 ) * .5
     b = ( b + .75 ) * .5

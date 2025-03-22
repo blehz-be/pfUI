@@ -1015,7 +1015,8 @@ pfUI:RegisterModule("gui", "vanilla:tbc", function ()
       },
       ["uf_layout"] = {
         "default:" .. T["Default"],
-        "tukui:TukUI"
+        "tukui:TukUI",
+        "blehzui:blehzUI"
       },
       ["uf_color"] = {
         "0:" .. T["Class"],
