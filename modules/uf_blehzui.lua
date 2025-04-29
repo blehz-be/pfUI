@@ -107,7 +107,7 @@ pfUI:RegisterModule("uf_blehzui", "vanilla:tbc", function ()
     pfUI.uf.target.hpRightText:SetFont(fontname, fontsize*2, fontstyle)
     pfUI.uf.target.hpRightText:SetParent(pfUI.uf.target.hp.bar)
     pfUI.uf.target.hpRightText:ClearAllPoints()
-    pfUI.uf.target.hpRightText:SetPoint("LEFT",pfUI.uf.target.hp.bar, "LEFT", default_border, 0)
+    pfUI.uf.target.hpRightText:SetPoint("LEFT",pfUI.uf.target.hp.bar, "LEFT", default_border + pfUI.uf.target.config.txthprightoffx, 0)
 
     pfUI.uf.target.powerRightText:SetParent(pfUI.uf.target.caption)
     pfUI.uf.target.powerRightText:ClearAllPoints()
