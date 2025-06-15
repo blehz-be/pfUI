@@ -10,8 +10,11 @@ pfUI:RegisterModule("nameplates", "vanilla:tbc", function ()
     ["FRIENDLY_PLAYER"] = { .2, .6, 1, .8 }
   }
 
+  local offtanks = {}
+
   local combatstate = {
     -- gets overwritten by user config
+    ["OFFTANK"]  = { r = .7, g = .4, b = .2, a = 1 },
     ["NOTHREAT"] = { r = .7, g = .7, b = .2, a = 1 },
     ["THREAT"]   = { r = .7, g = .2, b = .2, a = 1 },
     ["CASTING"]  = { r = .7, g = .2, b = .7, a = 1 },
@@ -46,6 +49,8 @@ pfUI:RegisterModule("nameplates", "vanilla:tbc", function ()
         color = combatstate.CASTING
       elseif C.nameplates.ccombatthreat == "1" and UnitIsUnit(target, "player") then
         color = combatstate.THREAT
+      elseif C.nameplates.ccombatofftank == "1" and UnitName(target) and offtanks[strlower(UnitName(target))] then
+        color = combatstate.OFFTANK
       elseif C.nameplates.ccombatnothreat == "1" and UnitExists(target) then
         color = combatstate.NOTHREAT
       elseif C.nameplates.ccombatstun == "1" and not UnitExists(target) and not UnitIsPlayer(guid) then
@@ -513,7 +518,13 @@ pfUI:RegisterModule("nameplates", "vanilla:tbc", function ()
     c.CASTING.r, c.CASTING.g, c.CASTING.b, c.CASTING.a = GetStringColor(C.nameplates.combatcasting)
     c.THREAT.r, c.THREAT.g, c.THREAT.b, c.THREAT.a = GetStringColor(C.nameplates.combatthreat)
     c.NOTHREAT.r, c.NOTHREAT.g, c.NOTHREAT.b, c.NOTHREAT.a = GetStringColor(C.nameplates.combatnothreat)
+    c.OFFTANK.r, c.OFFTANK.g, c.OFFTANK.b, c.OFFTANK.a = GetStringColor(C.nameplates.combatofftank)
     c.STUN.r, c.STUN.g, c.STUN.b, c.STUN.a = GetStringColor(C.nameplates.combatstun)
+
+    offtanks = {}
+    for k, v in pairs({strsplit("#", C.nameplates.combatofftanks)}) do
+      offtanks[string.lower(v)] = true
+    end
 
     nameplate:SetWidth(plate_width)
     nameplate:SetHeight(plate_height)
@@ -1018,22 +1029,34 @@ pfUI:RegisterModule("nameplates", "vanilla:tbc", function ()
 
     -- castbar update
     if C.nameplates["showcastbar"] == "1" and ( C.nameplates["targetcastbar"] == "0" or target ) then
-      local cast, nameSubtext, text, texture, startTime, endTime, isTradeSkill = UnitCastingInfo(target and "target" or name)
+      local channel, cast, nameSubtext, text, texture, startTime, endTime, isTradeSkill
+
+      -- detect cast or channel bars
+      cast, nameSubtext, text, texture, startTime, endTime, isTradeSkill = UnitCastingInfo(target and "target" or name)
+      if not cast then channel, nameSubtext, text, texture, startTime, endTime, isTradeSkill = UnitChannelInfo(target and "target" or name) end
 
       -- read enemy casts from SuperWoW if enabled
       if superwow_active then
         cast, nameSubtext, text, texture, startTime, endTime, isTradeSkill = UnitCastingInfo(nameplate.parent:GetName(1))
+        if not cast then channel, nameSubtext, text, texture, startTime, endTime, isTradeSkill = UnitChannelInfo(nameplate.parent:GetName(1)) end
       end
 
-      if not cast then
+      if not cast and not channel then
         nameplate.castbar:Hide()
-      elseif cast then
+      elseif cast or channel then
+        local effect = cast or channel
         local duration = endTime - startTime
+        local max = duration / 1000
+        local cur = GetTime() - startTime / 1000
+
+        -- invert castbar values while channeling
+        if channel then cur = max + startTime/1000 - GetTime() end
+
         nameplate.castbar:SetMinMaxValues(0,  duration/1000)
-        nameplate.castbar:SetValue(GetTime() - startTime/1000)
-        nameplate.castbar.text:SetText(round(startTime/1000 + duration/1000 - GetTime(),1))
+        nameplate.castbar:SetValue(cur)
+        nameplate.castbar.text:SetText(round(cur,1))
         if C.nameplates.spellname == "1" then
-          nameplate.castbar.spell:SetText(cast)
+          nameplate.castbar.spell:SetText(effect)
         else
           nameplate.castbar.spell:SetText("")
         end

@@ -17,7 +17,11 @@ pfUI:RegisterModule("panel", "vanilla:tbc", function()
         local servertime
         local time
         if C.global.twentyfour == "0" then
-          if h > 12 then
+          if h == 0 then
+            h = 12
+          elseif h == 12 then
+            noon = " PM"
+          elseif h > 12 then
             h = h - 12
             noon = " PM"
           end
@@ -67,7 +71,11 @@ pfUI:RegisterModule("panel", "vanilla:tbc", function()
         local secondsenabled = C.panel.seconds == "1"
         if C.global.twentyfour == "0" then
           if C.global.servertime == "1" then
-            if h > 12 then
+            if h == 0 then
+              h = 12
+            elseif h == 12 then
+              noon = "PM"
+            elseif h > 12 then
               h = h - 12
               noon = "PM"
             end
@@ -267,6 +275,20 @@ pfUI:RegisterModule("panel", "vanilla:tbc", function()
       local widget = CreateFrame("Frame", "pfPanelWidgetGold", UIParent)
       widget:RegisterEvent("PLAYER_ENTERING_WORLD")
       widget:RegisterEvent("PLAYER_MONEY")
+      widget.Click = function()
+        if IsShiftKeyDown() then
+          -- read current data
+          local realm = GetRealmName()
+          local unit  = UnitName("player")
+          local money = GetMoney()
+
+          -- reset gold value and hide tooltip
+          pfUI_cache["gold"][realm] = { [unit] = money }
+          GameTooltip:Hide()
+        else
+          OpenAllBags()
+        end
+      end
       widget.Tooltip = function()
         local gold = floor(GetMoney()/ 10000)
         local silver = floor(mod((GetMoney()/100),100))
@@ -296,6 +318,8 @@ pfUI:RegisterModule("panel", "vanilla:tbc", function()
         GameTooltip:AddDoubleLine("|cffffffff","")
         GameTooltip:AddDoubleLine(T["This Session"] .. ":", dmod .. CreateGoldString(math.abs(pfUI.panel.diffMoney)))
         GameTooltip:AddDoubleLine(T["Total Gold"] .. ":", CreateGoldString(totalgold))
+        GameTooltip:AddLine(" ")
+        GameTooltip:AddLine(T["Shift-Click to reset all money totals"], .5, .5, .5, 1)
         GameTooltip:Show()
       end
       widget:SetScript("OnEvent", function()
@@ -310,7 +334,7 @@ pfUI:RegisterModule("panel", "vanilla:tbc", function()
         pfUI_cache["gold"][realm] = pfUI_cache["gold"][realm] or {}
         pfUI_cache["gold"][realm][unit] = money
 
-        pfUI.panel:OutputPanel("gold", goldstr, widget.Tooltip, OpenAllBags)
+        pfUI.panel:OutputPanel("gold", goldstr, widget.Tooltip, widget.Click)
       end)
     end
 
