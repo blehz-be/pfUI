@@ -1,6 +1,12 @@
 pfUI:RegisterModule("uf_blehzui", "vanilla:tbc", function ()
   if C.unitframes.disable == "1" or C.unitframes.layout ~= "blehzui" then return end
 
+  for i=1, table.getn(UnitReactionColor) do
+    UnitReactionColor[i].r = (UnitReactionColor[i].r + .5 ) * .5
+    UnitReactionColor[i].g = (UnitReactionColor[i].g + .5 ) * .5
+    UnitReactionColor[i].b = (UnitReactionColor[i].b + .5 ) * .5
+  end
+
   -- update player layout
   local hookUpdateConfigPlayer = pfUI.uf.player.UpdateConfig
   function pfUI.uf.player.UpdateConfig()
